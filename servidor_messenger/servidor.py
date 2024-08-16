@@ -1,24 +1,24 @@
 import socket
 import threading
+import hashlib
 
 class Servidor:
     def __init__(self, port=12345):
-        self.host = self.get_ip_local()  # Detecta o IP local automaticamente
+        self.host = self.get_ip_local()
         self.port = port
         self.clientes = []
+        self.chave_secreta = "minha-chave-secreta"
         self.servidor_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.servidor_socket.bind((self.host, self.port))
-        self.servidor_socket.listen(5)  # Aceita até 5 conexões simultâneas
+        self.servidor_socket.listen(5)
 
     def get_ip_local(self):
-        # Descobre o IP local conectando-se a um servidor externo fictício
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            # Conectar-se a um endereço externo
             s.connect(("8.8.8.8", 80))
             ip_local = s.getsockname()[0]
-        except Exception as e:
-            ip_local = '127.0.0.1'  # Caso ocorra algum problema, utiliza localhost
+        except:
+            ip_local = '127.0.0.1'
         finally:
             s.close()
         return ip_local
@@ -34,17 +34,29 @@ class Servidor:
     def handle_client(self, cliente_socket):
         while True:
             try:
-                mensagem = cliente_socket.recv(1024)
-                if mensagem:
-                    print(f"Mensagem recebida: {mensagem.decode('utf-8')}")
-                    self.broadcast(mensagem, cliente_socket)
+                dados = cliente_socket.recv(1024).decode('utf-8')
+                mensagem, hash_recebido = dados.split('|')
+
+                if self.verificar_mensagem(mensagem, hash_recebido):
+                    print(f"Mensagem recebida: {mensagem}")
+                    self.broadcast(dados.encode('utf-8'), cliente_socket)
                 else:
-                    break
+                    print("Mensagem corrompida ou inválida.")
             except:
                 break
 
         cliente_socket.close()
         self.clientes.remove(cliente_socket)
+
+    def encriptar_mensagem(self, mensagem):
+        h = hashlib.blake2b(key=self.chave_secreta.encode('utf-8'))
+        h.update(mensagem.encode('utf-8'))
+        return h.hexdigest()
+
+    def verificar_mensagem(self, mensagem, hash_recebido):
+        h = hashlib.blake2b(key=self.chave_secreta.encode('utf-8'))
+        h.update(mensagem.encode('utf-8'))
+        return h.hexdigest() == hash_recebido
 
     def start(self):
         print(f"Servidor iniciado em {self.host}:{self.port}")
