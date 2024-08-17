@@ -6,7 +6,8 @@ authors = ["Thales H. Nascimento <thales_henrique_n@hotmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.12,<3.13"
+pyside6 = "^6.7.2"
 
 
 [build-system]
