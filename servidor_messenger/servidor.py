@@ -3,9 +3,10 @@ import threading
 import hashlib
 
 class Servidor:
-    def __init__(self, port=12345):
+    def __init__(self, output_function, port=12345):
         self.host = self.get_ip_local()
         self.port = port
+        self.output_function = output_function
         self.clientes = []
         self.chave_secreta = "minha-chave-secreta"
         self.servidor_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,10 +39,10 @@ class Servidor:
                 mensagem, hash_recebido = dados.split('|')
 
                 if self.verificar_mensagem(mensagem, hash_recebido):
-                    print(f"Mensagem recebida: {mensagem}")
+                    self.output_function(f"Mensagem recebida: {mensagem}")
                     self.broadcast(dados.encode('utf-8'), cliente_socket)
                 else:
-                    print("Mensagem corrompida ou inválida.")
+                    self.output_function("Mensagem corrompida ou inválida.")
             except:
                 break
 
@@ -59,14 +60,10 @@ class Servidor:
         return h.hexdigest() == hash_recebido
 
     def start(self):
-        print(f"Servidor iniciado em {self.host}:{self.port}")
+        self.output_function(f"Servidor iniciado em {self.host}:{self.port}")
         while True:
             cliente_socket, cliente_endereco = self.servidor_socket.accept()
-            print(f"Nova conexão de {cliente_endereco}")
+            self.output_function(f"Nova conexão de {cliente_endereco}")
             self.clientes.append(cliente_socket)
             thread_cliente = threading.Thread(target=self.handle_client, args=(cliente_socket,))
             thread_cliente.start()
-
-if __name__ == "__main__":
-    servidor = Servidor()
-    servidor.start()

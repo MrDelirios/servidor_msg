@@ -53,7 +53,7 @@ class Ui_Inicial(object):
                                         "	font-size: 30px;\n"
                                         "}")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
-        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setObjectName(u"vertilcalLayout")
         self.verticalLayout.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.label = QLabel(self.centralwidget)
         self.label.setObjectName(u"label")

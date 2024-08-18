@@ -29,9 +29,9 @@ class Cliente:
         hash_mensagem = self.encriptar_mensagem(mensagem)
         try:
             self.cliente_socket.send(f"{mensagem}|{hash_mensagem}".encode('utf-8'))
-            self.output_function(mensagem, hash_mensagem)
-        except:
-            self.output_function("Erro ao enviar a mensagem.")
+            self.output_function(mensagem)
+        except Exception as e:
+            self.output_function(f"Erro ao enviar a mensagem: {e}")
 
     def encriptar_mensagem(self, mensagem):
         h = hashlib.blake2b(key=self.chave_secreta.encode('utf-8'))
@@ -69,4 +69,13 @@ class Cliente:
             self.output_function(f"Erro ao conectar ao servidor: {e}")
         finally:
             self.cliente_socket.close()
+    
+    def disconnect(self):
+        try:
+            self.cliente_socket.shutdown(socket.SHUT_RDWR)  # Fecha a conexão de leitura e escrita
+        except Exception as e:
+            self.output_function(f"Erro ao desconectar: {e}")
+        finally:
+            self.cliente_socket.close()
+
     
