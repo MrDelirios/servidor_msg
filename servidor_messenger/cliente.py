@@ -1,37 +1,37 @@
 import socket
 import threading
 import hashlib
+import sys
 
 class Cliente:
-    def __init__(self, port=12345):
-        self.host = self.get_ip_local()
+    def __init__(self, output_function, port=12345):
+        self.host = self.get_ip_local()  # Detecta o IP local automaticamente
         self.port = port
         self.chave_secreta = "minha-chave-secreta"
         self.cliente_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.output_function = output_function  # Função de saída para a interf
 
     def receber_mensagens(self):
-        while True:
+         while True:
             try:
                 dados = self.cliente_socket.recv(1024).decode('utf-8')
                 mensagem, hash_recebido = dados.split('|')
                 if self.verificar_mensagem(mensagem, hash_recebido):
-                    print(f"Mensagem recebida: {mensagem}")
+                    self.output_function(f"Mensagem recebida: {mensagem}")
                 else:
-                    print("Mensagem corrompida ou inválida.")
-            except:
-                print("Erro ao receber a mensagem.")
+                    self.output_function("Conexão encerrada pelo servidor.")
+                    break
+            except Exception as e:
+                self.output_function(f"Erro ao receber a mensagem: {e}")
                 break
 
-    def enviar_mensagens(self):
-        while True:
-            mensagem = input("Você: ")
-            hash_mensagem = self.encriptar_mensagem(mensagem)
-            try:
-                self.cliente_socket.send(f"{mensagem}|{hash_mensagem}".encode('utf-8'))
-                print(mensagem, hash_mensagem)
-            except:
-                print("Erro ao enviar a mensagem.")
-                break
+    def enviar_mensagens(self, mensagem):
+        hash_mensagem = self.encriptar_mensagem(mensagem)
+        try:
+            self.cliente_socket.send(f"{mensagem}|{hash_mensagem}".encode('utf-8'))
+            self.output_function(mensagem, hash_mensagem)
+        except:
+            self.output_function("Erro ao enviar a mensagem.")
 
     def encriptar_mensagem(self, mensagem):
         h = hashlib.blake2b(key=self.chave_secreta.encode('utf-8'))
@@ -57,27 +57,16 @@ class Cliente:
     def start(self):
         try:
             self.cliente_socket.connect((self.host, self.port))
-            print(f"Conectado ao servidor em {self.host}:{self.port}")
+            self.output_function(f"Conectado ao servidor em {self.host}:{self.port}")
 
             # Criar threads para envio e recebimento de mensagens
             thread_receber = threading.Thread(target=self.receber_mensagens)
             thread_receber.start()
 
-            thread_enviar = threading.Thread(target=self.enviar_mensagens)
-            thread_enviar.start()
-
             thread_receber.join()
-            thread_enviar.join()
 
         except Exception as e:
-            print(f"Erro ao conectar ao servidor: {e}")
+            self.output_function(f"Erro ao conectar ao servidor: {e}")
         finally:
             self.cliente_socket.close()
-<<<<<<< HEAD
     
-=======
-
-if __name__ == "__main__":
-    cliente = Cliente()
-    cliente.start()
->>>>>>> 5553f2cb832bced254ee39ca90a01eb8fbda9a21
