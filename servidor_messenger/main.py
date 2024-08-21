@@ -1,6 +1,6 @@
 import sys
 import threading
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 from PySide6.QtCore import Qt, QSize
 from App import Ui_Inicial  # Importa a classe gerada pelo pyside6-uic
 from log import Ui_log
@@ -8,33 +8,32 @@ from clienteui import Ui_cliente
 from cliente import Cliente
 from servidor import Servidor
 
-class MainApp(QMainWindow):
+
+class Serv(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.ui = Ui_Inicial()
-        self.ui.setupUi(self)  # Inicializa a interface gráfica
-        
-        self.cliente_instance = None
-        
-        self.ui.InciarServidor.clicked.connect(self.log)
-        self.ui.Conectar.clicked.connect(self.cliente)
-        
-    def log(self):
         self.ui = Ui_log()
         self.ui.setupUi(self)
-        
-        Tservidor = threading.Thread(target=Servidor(self.write_to_text_area).start)
+    
+        self.serv = Servidor(self.write_to_text_area)
+        Tservidor = threading.Thread(target=self.serv.start)
         Tservidor.start()
     
-    def cliente(self):
-        self.setStyleSheet("")
-        self.setWindowFlags(Qt.Window)  # Remove flags anteriores
-        self.setMinimumSize(QSize(400, 300))  # Tamanho mínimo para a tela do cliente
-        self.setMaximumSize(QSize(16777215, 16777215))  # Permite maximizar
+    def write_to_text_area(self, message):
+        self.ui.Log.append(message)
+    
+    def closeEvent(self, event):
+        if self.serv:
+            self.serv.stop()  # Supondo que você tenha um método para parar o servidor
+        QApplication.quit()  # Encerra a aplicação
+        event.accept()
+
+
+class Client(QMainWindow):
+    def __init__(self):
+        super().__init__()
         self.ui = Ui_cliente()
         self.ui.setupUi(self)
-        self.show()
-
         
         self.cliente_instance = Cliente(self.write_to_text_area)
         Tcliente = threading.Thread(target=self.cliente_instance.start)
@@ -48,9 +47,6 @@ class MainApp(QMainWindow):
             if mensagem:  # Verifica se a mensagem não está vazia
                 self.cliente_instance.enviar_mensagens(mensagem)
                 self.ui.Input.clear()
-    
-    def write_to_text_area(self, message):
-        self.ui.Log.append(message)
         
     def keyPressEvent(self, event):
         # Verifica se a tecla pressionada é "Enter"
@@ -59,13 +55,33 @@ class MainApp(QMainWindow):
             self.ui.Enviar.click()
     
     def closeEvent(self, event):
-        # Desconectar do servidor quando a janela for fechada
-        if self.cliente_instance:  # Verifica se o cliente foi inicializado
+        if self.cliente_instance:
             self.cliente_instance.disconnect()
-        event.accept()  # Aceita o evento de fechamento
+        QApplication.quit()  # Encerra a aplicação
+        event.accept()
+    
+    def write_to_text_area(self, message):
+        self.ui.Log.append(message)
+    
 
-
+class MainApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_Inicial()
+        self.ui.setupUi(self)
         
+        self.ui.InciarServidor.clicked.connect(self.start_server)
+        self.ui.Conectar.clicked.connect(self.connect_client)
+        
+    def start_server(self):
+        self.serv_window = Serv()  # Cria uma instância de Serv
+        self.serv_window.show()
+        self.hide()  # Esconde a janela principal
+
+    def connect_client(self):
+        self.client_window = Client()  # Cria uma instância de Client
+        self.client_window.show()
+        self.hide()  # Esconde a janela principal
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
