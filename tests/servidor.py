@@ -40,7 +40,7 @@ class Servidor:
                 for cliente in sala_info['clientes']:
                     if cliente != cliente_atual:
                         try:
-                            cliente.send(mensagem)
+                            cliente.sendall(mensagem)
                         except socket.error:
                             sala_info['clientes'].remove(cliente)
 
@@ -90,7 +90,7 @@ class Servidor:
                     _, msg = mensagem.split(' ', 1)
                     sala_info = self.encontrar_sala_cliente(cliente_socket)
                     if sala_info:
-                        self.broadcast(dados, sala_info, cliente_socket)
+                        self.broadcast(msg.encode('utf-8'), sala_info, cliente_socket)
                     else:
                         cliente_socket.send("Sala não encontrada.".encode('utf-8'))
                 
