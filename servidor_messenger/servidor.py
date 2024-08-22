@@ -8,7 +8,7 @@ class Servidor:
         self.port = port
         self.output_function = output_function
         self.clientes = []
-        self.salas = {}  # Armazena informações das salas {nome_sala: {'senha': senha, 'clientes': [cliente_socket]}}
+        self.salas = {}  # Armazena informações das salas {nome_sala: {'clientes': [cliente_socket]}}
         self.servidor_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.servidor_socket.settimeout(1.0)  # Define um timeout para evitar bloqueios indefinidos
         self.lock = threading.Lock()
@@ -65,15 +65,12 @@ class Servidor:
                         cliente_socket.send("Sala já existe.".encode('utf-8'))
                 
                 elif dados.startswith('/entrar_sala'):
-                    # Entrada na sala: /entrar_sala nome_sala senha
-                    _, nome_sala, senha = dados.split(' ', 2)
+                    # Entrada na sala: /entrar_sala nome_sala
+                    _, nome_sala = dados.split(' ', 1)
                     sala_info = self.salas.get(nome_sala)
-                    if sala_info and sala_info['senha'] == senha:
-                        sala_info['clientes'].append(cliente_socket)
-                        self.output_function(f"Cliente entrou na sala '{nome_sala}'.")
-                    else:
-                        cliente_socket.send("Senha inválida ou sala não existe.".encode('utf-8'))
-                
+                    sala_info['clientes'].append(cliente_socket)
+                    self.output_function(f"Cliente entrou na sala '{nome_sala}'.")
+
                 elif dados.startswith('/sair_sala '):
                     # Saída da sala: /sair_sala nome_sala
                     _, nome_sala = dados.split(' ', 1)
@@ -83,11 +80,11 @@ class Servidor:
                         self.output_function(f"Cliente saiu da sala '{nome_sala}'.")
                 
                 elif dados.startswith('/mensagem'):
-                    # Envio de mensagem: /mensagem nome_sala mensagem
-                    _, nome_sala, mensagem = dados.split(' ', 2)
-                    sala_info = self.salas.get(nome_sala)
+                    # Envio de mensagem: /mensagem mensagem
+                    _, mensagem = dados.split(' ', 1)
+                    sala_info = self.encontrar_sala_cliente(cliente_socket)
                     if sala_info:
-                        self.broadcast(mensagem, nome_sala, cliente_socket)
+                        self.broadcast(mensagem, sala_info, cliente_socket)
                     else:
                         cliente_socket.send("Sala não encontrada.".encode('utf-8'))
                 elif dados.startswith('/get'):
@@ -138,3 +135,9 @@ class Servidor:
             for cliente_socket in self.clientes.values():
                 cliente_socket.close()
             self.clientes.clear()  # Limpar a lista de clientes
+    
+    def encontrar_sala_cliente(self, cliente_socket):
+        for nome_sala, sala_info in self.salas.items():
+            if cliente_socket in sala_info['clientes']:
+                return nome_sala
+        return None

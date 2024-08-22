@@ -36,7 +36,7 @@ class Cliente:
     def enviar_mensagens(self, mensagem):
         hash_mensagem = self.encriptar_mensagem(mensagem)
         try:
-            self.cliente_socket.send(f"{hash_mensagem}".encode('utf-8'))
+            self.cliente_socket.send(f"/mensagem {hash_mensagem}".encode('utf-8'))
             self.output_function(f"Eu: {mensagem}")
         except Exception as e:
             self.output_function(f"Erro ao enviar a mensagem: {e}")

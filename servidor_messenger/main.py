@@ -44,6 +44,7 @@ class Client(QMainWindow):
         self.ui.Enviar.clicked.connect(self.envia_mensagem)
         self.ui.definir.clicked.connect(self.definir_senha)
         self.ui.criar.clicked.connect(self.criar_sala)
+        self.ui.listView.doubleClicked.connect(self.on_item_double_clicked)
         
     def envia_mensagem(self):
         if self.cliente_instance is not None:  # Verifica se o cliente_instance foi criado
@@ -89,6 +90,13 @@ class Client(QMainWindow):
         self.cliente_instance.cliente_socket.send("/get".encode('utf-8'))
         self.ui.items = self.cliente_instance.sala
         self.ui.model.setStringList(self.ui.items)
+        self.ui.listView.setModel(self.ui.model)
+    
+    def on_item_double_clicked(self, index):
+        item_text = self.ui.listView.model().data(index)
+        comando = f"/entrar_sala {item_text}"
+        self.cliente_instance.cliente_socket.send(comando.encode('utf-8'))
+        self.ui.Central.setCurrentIndex(1)
 
 class MainApp(QMainWindow):
     def __init__(self):

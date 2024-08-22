@@ -64,7 +64,7 @@ class Ui_cliente(object):
         self.current_index = 0
         self.select_item(self.current_index)
         
-        self.selection_model.selectionChanged.connect(self.on_selection_changed)
+        #self.selection_model.selectionChanged.connect(self.on_selection_changed)
         self.model.modelReset.connect(self.on_model_reset)
 
 
@@ -142,11 +142,11 @@ class Ui_cliente(object):
         self.listView.setCurrentIndex(self.model.index(index, 0))
         self.listView.scrollTo(self.listView.currentIndex())  # Garante que o item esteja visível
 
-    def on_selection_changed(self):
+    """def on_selection_changed(self):
         selected_indexes = self.selection_model.selectedIndexes()
         if selected_indexes:
             selected_text = self.model.data(selected_indexes[0])
-            print(self, "Item Selecionado", f"Item selecionado: {selected_text}")
+            print(self, "Item Selecionado", f"Item selecionado: {selected_text}")"""
     
     def on_model_reset(self):
         self.listView.setModel(self.model)
