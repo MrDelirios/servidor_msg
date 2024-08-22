@@ -124,11 +124,15 @@ class Servidor:
                 break
 
     def stop(self):
-        """Para o servidor e fecha todas as conexões de clientes."""
         self.running = False
-        # Fechar o socket do servidor para quebrar o loop de aceitação de conexões
         if self.servidor_socket:
             self.servidor_socket.close()
+        with self.lock:
+            for sala_info in self.salas.items():
+                for cliente_socket in sala_info['clientes']:
+                    cliente_socket.close()
+            self.clientes.clear()
+
 
         # Fechar todos os sockets dos clientes
         with self.lock:
