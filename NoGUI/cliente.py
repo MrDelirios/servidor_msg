@@ -31,6 +31,8 @@ class Cliente:
                 if dados.startswith('/salas'):
                     _, lista_de_salas = dados.split(' ', 1)
                     self.sala = eval(lista_de_salas)
+                elif dados.startswith("Sala já existe."):
+                    print("Sala já existe.")
                 else:
                     mensagem = self.descriptografar_mensagem(dados)
                     print(f"Mensagem recebida: {mensagem}")
@@ -140,17 +142,19 @@ if __name__ == "__main__":
         
         if cliente.Estado == 1:
             os.system('cls' if os.name == 'nt' else 'clear')
+            cliente.cliente_socket.send("/get".encode('utf-8'))
             print("======== BlakeMSG ========")
             cliente.senha = input("Escolha uma senha: ")
             cliente.Estado = 2
         
         elif cliente.Estado == 2:
             os.system('cls' if os.name == 'nt' else 'clear')
+            cliente.cliente_socket.send("/get".encode('utf-8'))
             print("======== BlakeMSG ========")
             print("Salas Disponiveis: ")
             for salas in cliente.sala:
                 print(f"{salas}\n")
-            In = int(input("1: Entrar 2: Criar Sala 3: Sair"))
+            In = int(input("1: Entrar 2: Criar Sala 3: Sair\n"))
             if In not in [1, 2, 3]:
                 input("Opção invalida")
 
@@ -181,15 +185,15 @@ if __name__ == "__main__":
                 cliente.cliente_socket.send(comando.encode('utf-8'))
             else:
                 cliente.Estado = 99
-        
+                cliente.disconnect()
         elif cliente.Estado == 3:
             os.system('cls' if os.name == 'nt' else 'clear')
             print(f"======== {cliente.salaAtual} ========")
             while cliente.Estado == 3:
                 mensagem = input("Eu: ")
                 if mensagem.startswith("/sair"):
-                    cliente.Estado = 99
+                    cliente.cliente_socket.send(f"/sair_sala {cliente.salaAtual}".encode('utf-8'))
+                    cliente.Estado = 2
+                    break
                 cliente.enviar_mensagens(mensagem)
-
-    cliente.disconnect()
                 

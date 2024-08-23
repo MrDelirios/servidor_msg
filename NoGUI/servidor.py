@@ -56,9 +56,9 @@ class Servidor:
                 
                 # Decodificar a mensagem
                 mensagem = dados.decode('utf-8')
-                print(f"Recebido: {mensagem}")
                 
                 if mensagem.startswith('/criar_sala'):
+                    print(f"Cliente{cliente_socket.getpeername()} solicitou: {mensagem}")
                     # Criação de sala: /criar_sala nome_sala
                     _, nome_sala = mensagem.split(' ', 1)
                     if nome_sala not in self.salas:
@@ -68,6 +68,7 @@ class Servidor:
                         cliente_socket.send("Sala já existe.".encode('utf-8'))
                 
                 elif mensagem.startswith('/entrar_sala'):
+                    print(f"Cliente{cliente_socket.getpeername()} solicitou: {mensagem}")
                     # Entrada na sala: /entrar_sala nome_sala
                     _, nome_sala = mensagem.split(' ', 1)
                     sala_info = self.salas.get(nome_sala)
@@ -78,6 +79,7 @@ class Servidor:
                         cliente_socket.send("Sala não encontrada.".encode('utf-8'))
                 
                 elif mensagem.startswith('/sair_sala'):
+                    print(f"Cliente{cliente_socket.getpeername()} solicitou: {mensagem}")
                     # Saída da sala: /sair_sala nome_sala
                     _, nome_sala = mensagem.split(' ', 1)
                     sala_info = self.salas.get(nome_sala)
@@ -90,6 +92,7 @@ class Servidor:
                     _, msg = mensagem.split(' ', 1)
                     sala_info = self.encontrar_sala_cliente(cliente_socket)
                     if sala_info:
+                        print(f"Cliente{cliente_socket.getpeername()} Enviou: {msg} para sala: {sala_info}")
                         self.broadcast(msg.encode('utf-8'), sala_info, cliente_socket)
                     else:
                         cliente_socket.send("Sala não encontrada.".encode('utf-8'))
